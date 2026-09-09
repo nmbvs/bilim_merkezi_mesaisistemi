@@ -1,0 +1,121 @@
+@model MesaiYonetimSistemi.Application.DTOs.CreateOvertimeDto
+@{
+    ViewData["Title"] = "Yeni Hafta Sonu Mesaisi Oluştur";
+    var departments = ViewBag.Departments as List<string> ?? new List<string>();
+    var subeler = ViewBag.Subeler as List<string> ?? new List<string>();
+    var personnelList = ViewBag.PersonnelList as List<MesaiYonetimSistemi.Core.Entities.ApplicationUser> ?? new List<MesaiYonetimSistemi.Core.Entities.ApplicationUser>();
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card-custom p-4">
+            <h5 class="font-weight-bold mb-3"><i class="fa-solid fa-clock text-primary me-2"></i> Yeni Hafta Sonu Mesaisi Planlama</h5>
+            <p class="text-muted small mb-4">Mesai oluşturulduğunda sistem adil sıra algoritmasına göre ilgili departmandaki sıradaki personele 24 saat süreli teklif gönderecektir.</p>
+
+            <form asp-action="Create" method="post">
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="All" class="text-danger small mb-3"></div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label text-muted small">Mesai Tarihi</label>
+                        <input type="date" asp-for="Tarih" class="form-control" required />
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label text-muted small">Başlangıç Saati</label>
+                        <input type="time" asp-for="BaslangicSaati" class="form-control" required />
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label text-muted small">Bitiş Saati</label>
+                        <input type="time" asp-for="BitisSaati" class="form-control" required />
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label text-muted small">Departman (Boş bırakılırsa tüm departmanlar)</label>
+                        <select asp-for="Departman" class="form-select">
+                            <option value="">-- Tüm Departmanlar --</option>
+                            @foreach (var d in departments)
+                            {
+                                <option value="@d">@d</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label text-muted small">Şube (Boş bırakılırsa tüm şubeler)</label>
+                        <select asp-for="Sube" class="form-select">
+                            <option value="">-- Tüm Şubeler --</option>
+                            @foreach (var s in subeler)
+                            {
+                                <option value="@s">@s</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="col-md-12">
+                        <label class="form-label text-muted small">İlk Teklif Gidecek Personel (İsteğe Bağlı)</label>
+                        <select asp-for="SecilenIlkPersonelId" class="form-select">
+                            <option value="">-- Otomatik (Sıradaki Kişi) --</option>
+                            @foreach (var p in personnelList)
+                            {
+                                <option value="@p.Id">@p.AdSoyad (@p.Departman)</option>
+                            }
+                        </select>
+                        <small class="text-muted d-block mt-1"><i class="fa-solid fa-info-circle"></i> Sadece belirli bir personelle başlamak istiyorsanız seçiniz. Reddedilirse sıra normal kuyruktan devam eder.</small>
+                    </div>
+
+                    <div class="col-md-12">
+                        <label class="form-label text-muted small">Mesai Açıklaması / Detaylar</label>
+                        <textarea asp-for="Aciklama" class="form-control" rows="3" placeholder="Mesai yeri, yapılacak iş vb..." required></textarea>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-check mt-2">
+                            <input type="checkbox" asp-for="ResmiTatilMi" class="form-check-input" id="resmiTatilCheck" />
+                            <label class="form-check-label text-muted small" for="resmiTatilCheck">Resmi / Dini Tatil Mesaisi</label>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-check mt-2">
+                            <input type="checkbox" asp-for="SaatBelirsizMi" class="form-check-input" id="saatBelirsizCheck" onchange="toggleTimeInputs()" />
+                            <label class="form-check-label text-dark fw-bold small" for="saatBelirsizCheck">
+                                <i class="fa-solid fa-question-circle text-warning me-1"></i> Mesai Saati Belirsiz (Mesai Sonrası Personel Bildirecek)
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                    <a asp-action="Index" class="btn btn-light">İptal</a>
+                    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-paper-plane me-1"></i> Mesai Oluştur & Teklif Gönder</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function toggleTimeInputs() {
+            var isUncertain = document.getElementById('saatBelirsizCheck').checked;
+            var baslangicInput = document.querySelector('input[name="BaslangicSaati"]');
+            var bitisInput = document.querySelector('input[name="BitisSaati"]');
+
+            if (isUncertain) {
+                baslangicInput.removeAttribute('required');
+                bitisInput.removeAttribute('required');
+                baslangicInput.closest('.col-md-3').style.opacity = '0.5';
+                bitisInput.closest('.col-md-3').style.opacity = '0.5';
+            } else {
+                baslangicInput.setAttribute('required', 'required');
+                bitisInput.setAttribute('required', 'required');
+                baslangicInput.closest('.col-md-3').style.opacity = '1';
+                bitisInput.closest('.col-md-3').style.opacity = '1';
+            }
+        }
+        document.addEventListener('DOMContentLoaded', toggleTimeInputs);
+    </script>
+}

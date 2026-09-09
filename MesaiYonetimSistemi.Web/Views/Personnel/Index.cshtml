@@ -1,0 +1,227 @@
+@model IEnumerable<MesaiYonetimSistemi.Application.DTOs.UserDto>
+@{
+    ViewData["Title"] = "Personel Yönetimi";
+    var departments = ViewBag.Departments as List<string> ?? new List<string>();
+    var subeler = ViewBag.Subeler as List<string> ?? new List<string>();
+}
+
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <h4 class="font-weight-bold m-0">Personel Listesi</h4>
+        <p class="text-muted small m-0">Sistemdeki tüm personelleri yönetin, pasife alın veya Excel'den toplu içe aktarın.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <button class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#excelImportModal">
+            <i class="fa-solid fa-file-excel me-1"></i> Excel'den İçe Aktar
+        </button>
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="fa-solid fa-user-plus me-1"></i> Yeni Personel Ekle
+        </a>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card-custom p-3 mb-4">
+    <form method="get" class="row g-3">
+        <div class="col-md-4">
+            <input type="text" name="search" class="form-control" placeholder="Ad Soyad, Sicil No veya E-posta..." value="@Context.Request.Query["search"]" />
+        </div>
+        <div class="col-md-3">
+            <select name="department" class="form-select">
+                <option value="">-- Tüm Departmanlar --</option>
+                @foreach (var d in departments)
+                {
+                    <option value="@d" selected="@(Context.Request.Query["department"] == d)">@d</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-3">
+            <select name="sube" class="form-select">
+                <option value="">-- Tüm Şubeler --</option>
+                @foreach (var s in subeler)
+                {
+                    <option value="@s" selected="@(Context.Request.Query["sube"] == s)">@s</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-secondary w-100"><i class="fa-solid fa-filter me-1"></i> Filtrele</button>
+        </div>
+    </form>
+</div>
+
+<!-- Active Personnel Table -->
+<div class="card-custom p-4 mb-4">
+    <h5 class="mb-3 text-primary"><i class="fa-solid fa-users me-2"></i>Aktif Personeller</h5>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Sıra No</th>
+                    <th>Sicil No</th>
+                    <th>Ad Soyad</th>
+                    <th>E-posta</th>
+                    <th>Departman / Görev</th>
+                    <th>Şube</th>
+                    <th>İşe Giriş</th>
+                    <th>İlk Şifre</th>
+                    <th>Kabul / Red</th>
+                    <th>Durum</th>
+                    <th class="text-end">İşlemler</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any(m => m.AktifMi))
+                {
+                    <tr><td colspan="11" class="text-center text-muted py-4">Kayıtlı aktif personel bulunamadı.</td></tr>
+                }
+                @foreach (var u in Model.Where(m => m.AktifMi))
+                {
+                    <tr>
+                        <td>
+                            <span class="badge bg-secondary rounded-pill fs-6">#@u.QueuePosition</span>
+                        </td>
+                        <td><strong>@u.SicilNo</strong></td>
+                        <td>
+                            <div class="fw-semibold">@u.AdSoyad</div>
+                            <span class="text-muted small">TC: @u.TcKimlikNo</span>
+                        </td>
+                        <td>@u.Email</td>
+                        <td>
+                            <div>@u.Departman</div>
+                            <span class="text-muted small">@u.Gorev</span>
+                        </td>
+                        <td>@u.Sube</td>
+                        <td>@u.IseGirisTarihi.ToString("dd.MM.yyyy")</td>
+                        <td><code>@(string.IsNullOrEmpty(u.IlkSifre) ? "-" : u.IlkSifre)</code></td>
+                        <td>
+                            <span class="text-success fw-bold">@u.TotalAccepted</span> / <span class="text-danger fw-bold">@u.TotalRejected</span>
+                        </td>
+                        <td>
+                            <span class="badge bg-success-subtle text-success border border-success-subtle">Aktif</span>
+                        </td>
+                        <td class="text-end">
+                            <div class="d-inline-flex gap-1">
+                                <a asp-action="Edit" asp-route-id="@u.Id" class="btn btn-sm btn-outline-primary" title="Düzenle">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </a>
+
+                                <form asp-action="ToggleStatus" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@u.Id" />
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Sil (Pasife Al)">
+                                        <i class="fa-solid fa-trash"></i> Sil
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Toggle Button for Passive Personnel -->
+<div class="d-flex justify-content-end mb-3">
+    <button class="btn btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#passivePersonnelSection" aria-expanded="false" aria-controls="passivePersonnelSection">
+        <i class="fa-solid fa-eye me-1"></i> Silinmiş (Pasif) Personelleri Göster / Gizle
+    </button>
+</div>
+
+<!-- Passive Personnel Table (Hidden by default using Bootstrap Collapse) -->
+<div class="collapse" id="passivePersonnelSection">
+    <div class="card-custom p-4">
+        <h5 class="mb-3 text-secondary"><i class="fa-solid fa-user-slash me-2"></i>Silinmiş (Pasif) Personeller</h5>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Sıra No</th>
+                        <th>Sicil No</th>
+                        <th>Ad Soyad</th>
+                        <th>E-posta</th>
+                        <th>Departman / Görev</th>
+                        <th>Şube</th>
+                        <th>İşe Giriş</th>
+                        <th>Kabul / Red</th>
+                        <th>Durum</th>
+                        <th class="text-end">İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.Any(m => !m.AktifMi))
+                    {
+                        <tr><td colspan="10" class="text-center text-muted py-4">Silinmiş personel bulunmamaktadır.</td></tr>
+                    }
+                    @foreach (var u in Model.Where(m => !m.AktifMi))
+                    {
+                        <tr class="opacity-75">
+                            <td>
+                                <span class="badge bg-secondary rounded-pill fs-6">#@u.QueuePosition</span>
+                            </td>
+                            <td><strong>@u.SicilNo</strong></td>
+                            <td>
+                                <div class="fw-semibold text-decoration-line-through">@u.AdSoyad</div>
+                                <span class="text-muted small">TC: @u.TcKimlikNo</span>
+                            </td>
+                            <td>@u.Email</td>
+                            <td>
+                                <div>@u.Departman</div>
+                                <span class="text-muted small">@u.Gorev</span>
+                            </td>
+                            <td>@u.Sube</td>
+                            <td>@u.IseGirisTarihi.ToString("dd.MM.yyyy")</td>
+                            <td>
+                                <span class="text-success fw-bold">@u.TotalAccepted</span> / <span class="text-danger fw-bold">@u.TotalRejected</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle">Silinmiş</span>
+                            </td>
+                            <td class="text-end">
+                                <div class="d-inline-flex gap-1">
+                                    <form asp-action="ToggleStatus" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@u.Id" />
+                                        <button type="submit" class="btn btn-sm btn-outline-success" title="Geri Getir (Aktif Et)">
+                                            <i class="fa-solid fa-rotate-left"></i> Geri Getir
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Excel Import Modal -->
+<div class="modal fade" id="excelImportModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="ImportFromExcel" method="post" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fa-solid fa-file-excel text-success me-2"></i> Excel'den Toplu Personel Aktar</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="small text-muted mb-3">
+                        Excel dosyasında sütun sırası şu şekilde olmalıdır:<br />
+                        <code>Sütun 1: Ad Soyad | Sütun 2: Sicil No | Sütun 3: TC Kimlik | Sütun 4: E-posta | Sütun 5: Telefon | Sütun 6: Departman | Sütun 7: Görev | Sütun 8: Şube</code>
+                    </p>
+                    <div class="mb-3">
+                        <label class="form-label small">.xlsx Dosyası Seçin</label>
+                        <input type="file" name="excelFile" class="form-control" accept=".xlsx" required />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">İptal</button>
+                    <button type="submit" class="btn btn-success"><i class="fa-solid fa-upload me-1"></i> İçe Aktar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,36 @@
+@model MesaiYonetimSistemi.Application.DTOs.AnnouncementDto
+@{
+    ViewData["Title"] = "Yeni Duyuru Yayınla";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-7">
+        <div class="card-custom p-4">
+            <h5 class="font-weight-bold mb-3"><i class="fa-solid fa-bullhorn text-primary me-2"></i> Yeni Duyuru Formu</h5>
+            <form asp-action="Create" method="post">
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="All" class="text-danger small mb-3"></div>
+
+                <div class="mb-3">
+                    <label class="form-label text-muted small">Duyuru Başlığı</label>
+                    <input type="text" asp-for="Baslik" class="form-control" required />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label text-muted small">Duyuru İçeriği</label>
+                    <textarea asp-for="Icerik" class="form-control" rows="5" required></textarea>
+                </div>
+
+                <div class="form-check mb-4">
+                    <input type="checkbox" asp-for="OncelikliMi" class="form-check-input" id="oncelikliCheck" />
+                    <label class="form-check-label text-muted small" for="oncelikliCheck">Öncelikli / Acil Duyuru İşaretle</label>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2">
+                    <a asp-action="Index" class="btn btn-light">İptal</a>
+                    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-paper-plane me-1"></i> Yayınla</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

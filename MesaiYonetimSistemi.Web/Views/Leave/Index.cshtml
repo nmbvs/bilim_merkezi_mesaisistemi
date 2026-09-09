@@ -1,0 +1,58 @@
+@model IEnumerable<MesaiYonetimSistemi.Application.DTOs.LeaveDto>
+@{
+    ViewData["Title"] = "Personel İzinleri";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="font-weight-bold m-0">Personel İzin Yönetimi</h4>
+        <p class="text-muted small m-0">Sistemdeki personellerin izin durumlarını listeleyin ve yönetin.</p>
+    </div>
+    <a asp-action="Create" class="btn btn-primary">
+        <i class="fa-solid fa-plus me-1"></i> Yeni İzin Ekle
+    </a>
+</div>
+
+<div class="card-custom p-4">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Personel</th>
+                    <th>İzin Türü</th>
+                    <th>Başlangıç Tarihi</th>
+                    <th>Bitiş Tarihi</th>
+                    <th>Açıklama</th>
+                    <th>Oluşturan</th>
+                    <th class="text-end">İşlem</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr><td colspan="7" class="text-center text-muted py-4">Kayıtlı izin bulunamadı.</td></tr>
+                }
+                @foreach (var l in Model)
+                {
+                    <tr>
+                        <td><strong>@l.PersonnelAdSoyad</strong></td>
+                        <td><span class="badge bg-secondary">@l.IzinTuru</span></td>
+                        <td>@l.BaslangicTarihi.ToString("dd.MM.yyyy")</td>
+                        <td>@l.BitisTarihi.ToString("dd.MM.yyyy")</td>
+                        <td><small class="text-muted">@l.Aciklama</small></td>
+                        <td><small class="text-muted">@l.OlusturanUserAdSoyad</small></td>
+                        <td class="text-end">
+                            <form asp-action="Delete" method="post" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@l.Id" />
+                                <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('Bu izin kaydını silmek istediğinizden emin misiniz?');">
+                                    <i class="fa-solid fa-trash me-1"></i> Sil
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -1,0 +1,136 @@
+@model MesaiYonetimSistemi.Application.DTOs.DashboardDto
+@{
+    ViewData["Title"] = "Personel Paneli";
+}
+
+<!-- Pending Offers Countdown Banner -->
+@if (Model.PendingOffers.Any())
+{
+    foreach (var offer in Model.PendingOffers)
+    {
+        <div class="countdown-banner mb-4">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                <div>
+                    <div class="badge badge-bekliyor mb-2"><i class="fa-solid fa-clock me-1"></i> YANIT BEKLEYEN MESAİ TEKLİFİ</div>
+                    <h4 class="font-weight-bold m-0">@offer.OvertimeTarih.ToString("dd.MM.yyyy dddd")</h4>
+                    <p class="m-0 text-white-50">Saat: @offer.BaslangicSaati.ToString(@"hh\:mm") - @offer.BitisSaati.ToString(@"hh\:mm") | Açıklama: @offer.OvertimeAciklama</p>
+                </div>
+                
+                <div class="text-md-end">
+                    <span class="d-block small text-white-50">Kalan Süre (24 Saat Kuralı)</span>
+                    <div class="countdown-timer text-warning my-1" data-countdown-end="@offer.SonCevapTarihi.ToString("yyyy-MM-ddTHH:mm:ss")">
+                        --:--:--
+                    </div>
+                    
+                    <div class="d-flex gap-2 mt-2">
+                        <form asp-controller="Overtime" asp-action="RespondOffer" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="offerId" value="@offer.Id" />
+                            <input type="hidden" name="isAccepted" value="true" />
+                            <button type="submit" class="btn btn-success font-weight-bold px-4">
+                                <i class="fa-solid fa-check me-1"></i> KABUL ET
+                            </button>
+                        </form>
+                        
+                        <button type="button" class="btn btn-danger font-weight-bold px-4" data-bs-toggle="modal" data-bs-target="#rejectModal_@offer.Id">
+                            <i class="fa-solid fa-xmark me-1"></i> REDDET
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reject Reason Modal -->
+        <div class="modal fade" id="rejectModal_@offer.Id" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form asp-controller="Overtime" asp-action="RespondOffer" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="offerId" value="@offer.Id" />
+                        <input type="hidden" name="isAccepted" value="false" />
+                        <div class="modal-header">
+                            <h5 class="modal-title text-danger"><i class="fa-solid fa-triangle-exclamation me-2"></i> Mesai Teklifini Reddet</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p class="small text-muted">Mesai teklifini reddetmek istediğinizden emin misiniz? Reddetmeniz durumunda teklif otomatik olarak sıradaki mesai arkadaşınıza iletilecektir.</p>
+                            <div class="mb-3">
+                                <label class="form-label small">Red Nedeni (İsteğe Bağlı)</label>
+                                <textarea name="rejectReason" class="form-control" rows="3" placeholder="Gerekçenizi belirtebilirsiniz..."></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Vazgeç</button>
+                            <button type="submit" class="btn btn-danger">Reddetmeyi Onayla</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    }
+}
+else
+{
+    <div class="alert alert-info border-0 shadow-sm mb-4">
+        <i class="fa-solid fa-circle-info me-2"></i> Şu anda yanıtınızı bekleyen herhangi bir hafta sonu mesai teklifi bulunmamaktadır.
+    </div>
+}
+
+<div class="row g-4">
+    <!-- My Assigned Overtimes -->
+    <div class="col-lg-8">
+        <div class="card-custom p-4">
+            <h6 class="font-weight-bold mb-3"><i class="fa-solid fa-calendar-check text-primary me-2"></i> Atanan Mesailerim</h6>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Tarih</th>
+                            <th>Saat</th>
+                            <th>Açıklama</th>
+                            <th>Şube / Departman</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!Model.RecentOvertimes.Any())
+                        {
+                            <tr><td colspan="5" class="text-center text-muted py-4">Tarafınıza henüz atanmış bir mesai bulunmuyor.</td></tr>
+                        }
+                        @foreach (var ot in Model.RecentOvertimes)
+                        {
+                            <tr>
+                                <td><strong>@ot.Tarih.ToString("dd.MM.yyyy")</strong></td>
+                                <td>@ot.BaslangicSaati.ToString(@"hh\:mm") - @ot.BitisSaati.ToString(@"hh\:mm")</td>
+                                <td>@ot.Aciklama</td>
+                                <td>@ot.Sube / @ot.Departman</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Announcements Sidebar -->
+    <div class="col-lg-4">
+        <div class="card-custom p-4">
+            <h6 class="font-weight-bold mb-3"><i class="fa-solid fa-bullhorn text-primary me-2"></i> Duyurular</h6>
+            <div class="list-group list-group-flush">
+                @if (!Model.RecentAnnouncements.Any())
+                {
+                    <p class="text-muted small">Aktif duyuru bulunmuyor.</p>
+                }
+                @foreach (var ann in Model.RecentAnnouncements)
+                {
+                    <div class="list-group-item px-0">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <strong class="small">@ann.Baslik</strong>
+                            <small class="text-muted" style="font-size:0.75rem;">@ann.OlusturmaTarihi.ToString("dd.MM")</small>
+                        </div>
+                        <p class="small text-muted m-0">@ann.Icerik</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

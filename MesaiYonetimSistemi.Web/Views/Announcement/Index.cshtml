@@ -1,0 +1,52 @@
+@model IEnumerable<MesaiYonetimSistemi.Application.DTOs.AnnouncementDto>
+@{
+    ViewData["Title"] = "Duyurular";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="font-weight-bold m-0">Sistem Duyuruları</h4>
+        <p class="text-muted small m-0">Yönetim tarafından yayınlanan resmi duyuru ve bilgilendirmeler.</p>
+    </div>
+    @if (User.IsInRole("Yonetici"))
+    {
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="fa-solid fa-plus me-1"></i> Yeni Duyuru Ekle
+        </a>
+    }
+</div>
+
+<div class="row g-4">
+    @if (!Model.Any())
+    {
+        <div class="col-12 text-center py-5 text-muted">Henüz yayınlanmış duyuru yok.</div>
+    }
+    @foreach (var ann in Model)
+    {
+        <div class="col-md-6">
+            <div class="card-custom p-4 h-100 @(ann.OncelikliMi ? "border-start border-4 border-danger" : "")">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h5 class="font-weight-bold m-0">
+                        @if (ann.OncelikliMi) { <span class="badge bg-danger me-1">Önemli</span> }
+                        @ann.Baslik
+                    </h5>
+                    <small class="text-muted">@ann.OlusturmaTarihi.ToString("dd.MM.yyyy HH:mm")</small>
+                </div>
+                <p class="text-muted small mb-3">@ann.Icerik</p>
+                <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                    <span class="small text-muted"><i class="fa-solid fa-user-pen me-1"></i> @ann.YayinlayanAdSoyad</span>
+                    @if (User.IsInRole("Yonetici"))
+                    {
+                        <form asp-action="Delete" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@ann.Id" />
+                            <button type="submit" class="btn btn-link text-danger p-0 border-0" onclick="return confirm('Duyuruyu silmek istediğinizden emin misiniz?');">
+                                <i class="fa-solid fa-trash-can me-1"></i> Sil
+                            </button>
+                        </form>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>

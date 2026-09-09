@@ -1,0 +1,113 @@
+@model IEnumerable<MesaiYonetimSistemi.Application.DTOs.OvertimeDto>
+@{
+    ViewData["Title"] = "Raporlar & Excel Dışa Aktar";
+}
+
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <h4 class="font-weight-bold m-0">Sistem Raporları & Excel İndirme</h4>
+        <p class="text-muted small m-0">Mesai ve personel verilerini kurumsal Excel (.xlsx) ve basılabilir rapor formatında indirin.</p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+        <a asp-action="ExportOvertimesExcel" class="btn btn-success">
+            <i class="fa-solid fa-file-excel me-1"></i> Mesailer Excel
+        </a>
+        <a asp-action="ExportPersonnelExcel" class="btn btn-outline-success">
+            <i class="fa-solid fa-file-excel me-1"></i> Personel Listesi Excel
+        </a>
+        <a asp-action="ExportHtmlReport" target="_blank" class="btn btn-danger">
+            <i class="fa-solid fa-file-code me-1"></i> HTML / Yazdır
+        </a>
+    </div>
+</div>
+
+<!-- Export Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="card-custom p-4 text-center h-100">
+            <div class="bg-success-subtle text-success p-3 rounded-circle d-inline-block mb-3">
+                <i class="fa-solid fa-file-excel fs-2"></i>
+            </div>
+            <h5 class="font-weight-bold">Mesai Raporu (Excel)</h5>
+            <p class="text-muted small mb-4">Tüm hafta sonu mesailerinin tarih, saat, kontenjan, atanmış personel ve durum detayları.</p>
+            <a asp-action="ExportOvertimesExcel" class="btn btn-success w-100">
+                <i class="fa-solid fa-download me-1"></i> .XLSX İndir
+            </a>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card-custom p-4 text-center h-100">
+            <div class="bg-primary-subtle text-primary p-3 rounded-circle d-inline-block mb-3">
+                <i class="fa-solid fa-users fs-2"></i>
+            </div>
+            <h5 class="font-weight-bold">Personel & Sıra Raporu</h5>
+            <p class="text-muted small mb-4">Tüm personellerin sicil no, departman, sıra pozisyonu, kabul/red istatistikleri.</p>
+            <a asp-action="ExportPersonnelExcel" class="btn btn-primary w-100">
+                <i class="fa-solid fa-download me-1"></i> .XLSX İndir
+            </a>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card-custom p-4 text-center h-100">
+            <div class="bg-danger-subtle text-danger p-3 rounded-circle d-inline-block mb-3">
+                <i class="fa-solid fa-file-pdf fs-2"></i>
+            </div>
+            <h5 class="font-weight-bold">Detaylı Yazdırılabilir Rapor</h5>
+            <p class="text-muted small mb-4">Resmi kurumlar için özel şablonlu, basılabilir HTML / PDF formatında mesai çıktısı.</p>
+            <a asp-action="ExportHtmlReport" target="_blank" class="btn btn-danger w-100">
+                <i class="fa-solid fa-print me-1"></i> Görüntüle & Yazdır
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Preview Table -->
+<div class="card-custom p-4">
+    <h6 class="font-weight-bold mb-3"><i class="fa-solid fa-table me-2 text-primary"></i> Rapor Önizlemesi</h6>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Mesai ID</th>
+                    <th>Tarih</th>
+                    <th>Saat</th>
+                    <th>Departman / Şube</th>
+                    <th>Açıklama</th>
+                    <th>Atanan Personel</th>
+                    <th>Durum</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr><td colspan="7" class="text-center text-muted py-4">Raporlanacak mesai verisi bulunamadı.</td></tr>
+                }
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td><strong>#@item.Id</strong></td>
+                        <td>@item.Tarih.ToString("dd.MM.yyyy")</td>
+                        <td>@item.BaslangicSaati.ToString(@"hh\:mm") - @item.BitisSaati.ToString(@"hh\:mm")</td>
+                        <td>@item.Departman / @item.Sube</td>
+                        <td>@item.Aciklama</td>
+                        <td>
+                            @if (!string.IsNullOrEmpty(item.AtananUserAdSoyad))
+                            {
+                                <span class="fw-bold text-success"><i class="fa-solid fa-user-check me-1"></i>@item.AtananUserAdSoyad</span>
+                            }
+                            else
+                            {
+                                <span class="text-warning"><i class="fa-solid fa-spinner fa-spin me-1"></i>Atama Bekleniyor</span>
+                            }
+                        </td>
+                        <td>
+                            @if (item.Durum == "Planlandi") { <span class="badge badge-bekliyor">Planlandı</span> }
+                            else if (item.Durum == "Tamamlandi") { <span class="badge badge-kabul">Tamamlandı</span> }
+                            else { <span class="badge badge-red">İptal</span> }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -1,0 +1,92 @@
+@model MesaiYonetimSistemi.Application.DTOs.CreateUserDto
+@{
+    ViewData["Title"] = "Yeni Personel Ekle";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card-custom p-4">
+            <h5 class="font-weight-bold mb-4"><i class="fa-solid fa-user-plus text-primary me-2"></i> Yeni Personel Tanımlama</h5>
+            
+            <form asp-action="Create" method="post">
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="All" class="text-danger small mb-3"></div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label text-muted small">Ad Soyad</label>
+                        <input type="text" asp-for="AdSoyad" class="form-control" required />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-muted small">Sicil No</label>
+                        <input type="text" asp-for="SicilNo" class="form-control" required />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-muted small">TC Kimlik No</label>
+                        <input type="text" asp-for="TcKimlikNo" class="form-control" maxlength="11" required />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-muted small">E-posta Adresi</label>
+                        <input type="email" asp-for="Email" class="form-control" required />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-muted small">Telefon Numarası</label>
+                        <input type="text" asp-for="PhoneNumber" class="form-control" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-muted small">Departman</label>
+                        <input type="text" asp-for="Departman" class="form-control" list="departmentsDl" required autocomplete="off" onclick="if(this.showPicker) this.showPicker();" placeholder="Kayıtlılardan seçin veya yeni yazın..." />
+                        <datalist id="departmentsDl">
+                            @if (ViewBag.Departments != null)
+                            {
+                                @foreach (var d in (List<string>)ViewBag.Departments)
+                                {
+                                    <option value="@d"></option>
+                                }
+                            }
+                        </datalist>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-muted small">Görev / Unvan</label>
+                        <input type="text" asp-for="Gorev" class="form-control" list="gorevlerDl" autocomplete="off" onclick="if(this.showPicker) this.showPicker();" placeholder="Kayıtlılardan seçin veya yeni yazın..." />
+                        <datalist id="gorevlerDl">
+                            @if (ViewBag.Gorevler != null)
+                            {
+                                @foreach (var g in (List<string>)ViewBag.Gorevler)
+                                {
+                                    <option value="@g"></option>
+                                }
+                            }
+                        </datalist>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-muted small">Şube</label>
+                        <input type="text" asp-for="Sube" class="form-control" list="subelerDl" autocomplete="off" onclick="if(this.showPicker) this.showPicker();" placeholder="Kayıtlılardan seçin veya yeni yazın..." />
+                        <datalist id="subelerDl">
+                            @if (ViewBag.Subeler != null)
+                            {
+                                @foreach (var s in (List<string>)ViewBag.Subeler)
+                                {
+                                    <option value="@s"></option>
+                                }
+                            }
+                        </datalist>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-muted small">İşe Giriş Tarihi</label>
+                        <input type="date" asp-for="IseGirisTarihi" class="form-control" value="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-muted small">İlk Şifre</label>
+                        <input type="password" asp-for="Password" class="form-control" value="Personel123!" required />
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2 mt-4">
+                    <a asp-action="Index" class="btn btn-light">İptal</a>
+                    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-save me-1"></i> Personel Kaydet</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

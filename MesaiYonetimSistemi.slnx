@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="MesaiYonetimSistemi.Application/MesaiYonetimSistemi.Application.csproj" />
+  <Project Path="MesaiYonetimSistemi.Core/MesaiYonetimSistemi.Core.csproj" />
+  <Project Path="MesaiYonetimSistemi.Infrastructure/MesaiYonetimSistemi.Infrastructure.csproj" />
+  <Project Path="MesaiYonetimSistemi.Web/MesaiYonetimSistemi.Web.csproj" />
+</Solution>

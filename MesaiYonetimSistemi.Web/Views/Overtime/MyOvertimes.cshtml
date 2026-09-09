@@ -1,0 +1,181 @@
+@model IEnumerable<MesaiYonetimSistemi.Application.DTOs.OvertimeDto>
+@{
+    ViewData["Title"] = "Mesai Geçmişim";
+}
+
+<div class="mb-4">
+    <h4 class="font-weight-bold m-0">Atanan Hafta Sonu Mesailerim</h4>
+    <p class="text-muted small m-0">Kabul edip üstlendiğiniz tüm hafta sonu mesailerinin geçmişi.</p>
+</div>
+
+<div class="card-custom p-4">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Tarih</th>
+                    <th>Saat</th>
+                    <th>Açıklama</th>
+                    <th>Şube / Departman</th>
+                    <th>Resmi Tatil</th>
+                    <th>Durum</th>
+                    <th>İşlem</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr><td colspan="7" class="text-center text-muted py-4">Tarafınıza atanmış mesai bulunmamaktadır.</td></tr>
+                }
+                @foreach (var o in Model)
+                {
+                    <tr>
+                        <td><strong>@o.Tarih.ToString("dd.MM.yyyy dddd")</strong></td>
+                        <td>
+                            @if (o.SaatBelirsizMi)
+                            {
+                                if (o.SaatBildirimDurumu == MesaiYonetimSistemi.Core.Enums.SaatBildirimStatus.Yok)
+                                {
+                                    <span class="badge bg-warning text-dark"><i class="fa-solid fa-question me-1"></i> Saati Belirsiz</span>
+                                }
+                                else if (o.SaatBildirimDurumu == MesaiYonetimSistemi.Core.Enums.SaatBildirimStatus.OnayBekliyor)
+                                {
+                                    <span class="fw-bold text-primary">@o.BildirilenBaslangicSaati?.ToString(@"hh\:mm") - @o.BildirilenBitisSaati?.ToString(@"hh\:mm")</span>
+                                }
+                                else if (o.SaatBildirimDurumu == MesaiYonetimSistemi.Core.Enums.SaatBildirimStatus.Reddedildi)
+                                {
+                                    <span class="badge bg-danger"><i class="fa-solid fa-triangle-exclamation me-1"></i> Reddedildi</span>
+                                }
+                                else
+                                {
+                                    <span class="fw-bold">@o.BaslangicSaati.ToString(@"hh\:mm") - @o.BitisSaati.ToString(@"hh\:mm")</span>
+                                }
+                            }
+                            else
+                            {
+                                <span>@o.BaslangicSaati.ToString(@"hh\:mm") - @o.BitisSaati.ToString(@"hh\:mm")</span>
+                            }
+                        </td>
+                        <td>@o.Aciklama</td>
+                        <td>@o.Sube / @o.Departman</td>
+                        <td>@(o.ResmiTatilMi ? "Evet" : "Hayır")</td>
+                        <td>
+                            @if (o.SaatBelirsizMi)
+                            {
+                                if (o.SaatBildirimDurumu == MesaiYonetimSistemi.Core.Enums.SaatBildirimStatus.Yok)
+                                {
+                                    <span class="badge bg-warning text-dark">Saat Bildirimi Bekleniyor</span>
+                                }
+                                else if (o.SaatBildirimDurumu == MesaiYonetimSistemi.Core.Enums.SaatBildirimStatus.OnayBekliyor)
+                                {
+                                    <span class="badge bg-info text-dark"><i class="fa-solid fa-clock me-1"></i> Yönetici Onayı Bekliyor</span>
+                                }
+                                else if (o.SaatBildirimDurumu == MesaiYonetimSistemi.Core.Enums.SaatBildirimStatus.Reddedildi)
+                                {
+                                    <span class="badge bg-danger">Saat Reddedildi</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-success"><i class="fa-solid fa-check me-1"></i> Tamamlandı</span>
+                                }
+                            }
+                            else
+                            {
+                                <span class="badge badge-kabul">@o.Durum</span>
+                            }
+                        </td>
+                        <td>
+                            @if (o.SaatBelirsizMi && (o.SaatBildirimDurumu == MesaiYonetimSistemi.Core.Enums.SaatBildirimStatus.Yok || o.SaatBildirimDurumu == MesaiYonetimSistemi.Core.Enums.SaatBildirimStatus.Reddedildi))
+                            {
+                                var todayDate = DateTime.Now.Date;
+                                var isFutureDate = (todayDate < o.Tarih.Date);
+
+                                if (isFutureDate)
+                                {
+                                    <span class="badge bg-secondary py-2 px-2" title="Saat bildirimi mesai günü veya sonrasında yapılabilir.">
+                                        <i class="fa-solid fa-lock me-1"></i> Mesai Günü Bekleniyor
+                                    </span>
+                                }
+                                else
+                                {
+                                    <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#submitHoursModal_@o.Id">
+                                        <i class="fa-solid fa-clock me-1"></i> Saat Bildir
+                                    </button>
+                                }
+                            }
+                            else
+                            {
+                                <span class="text-muted small">-</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@* Modal Pencereleri Tablo Dışında Render Ediliyor *@
+@foreach (var o in Model)
+{
+    @if (o.SaatBelirsizMi && (o.SaatBildirimDurumu == MesaiYonetimSistemi.Core.Enums.SaatBildirimStatus.Yok || o.SaatBildirimDurumu == MesaiYonetimSistemi.Core.Enums.SaatBildirimStatus.Reddedildi))
+    {
+        var todayDate = DateTime.Now.Date;
+        var isToday = (todayDate == o.Tarih.Date);
+        var isFutureDate = (todayDate < o.Tarih.Date);
+
+        if (!isFutureDate)
+        {
+            var maxTimeForToday = isToday ? DateTime.Now.ToString(@"HH\:mm") : null;
+
+            <!-- Modal Form -->
+            <div class="modal fade" id="submitHoursModal_@o.Id" tabindex="-1" aria-labelledby="modalLabel_@o.Id" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <form asp-action="SubmitHours" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="OvertimeId" value="@o.Id" />
+                            <div class="modal-header bg-light">
+                                <h5 class="modal-title font-weight-bold" id="modalLabel_@o.Id">
+                                    <i class="fa-solid fa-clock text-primary me-2"></i> Mesai Çalışma Saatlerini Bildir
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p class="text-muted small"><strong>@o.Tarih.ToString("dd.MM.yyyy dddd")</strong> tarihindeki gerçekleşen çalışma saatlerinizi ve açıklamayı yazıp yönetici onayına gönderebilirsiniz.</p>
+                                @if (isToday)
+                                {
+                                    <div class="alert alert-info py-2 px-3 small mb-3">
+                                        <i class="fa-solid fa-circle-info me-1"></i> <strong>Not:</strong> Bugün mesai günü olduğu için bitiş saati en fazla şu anki saat (<strong>@DateTime.Now.ToString("HH:mm")</strong>) olabilir.
+                                    </div>
+                                }
+                                <div class="row g-3">
+                                    <div class="col-6">
+                                        <label class="form-label text-muted small fw-bold">Başlangıç Saati</label>
+                                        <input type="time" name="BaslangicSaati" class="form-control" required 
+                                               max="@maxTimeForToday"
+                                               value="@(o.BildirilenBaslangicSaati.HasValue ? o.BildirilenBaslangicSaati.Value.ToString(@"hh\:mm") : "08:00")" />
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label text-muted small fw-bold">Bitiş Saati</label>
+                                        <input type="time" name="BitisSaati" class="form-control" required 
+                                               max="@maxTimeForToday"
+                                               value="@(o.BildirilenBitisSaati.HasValue ? o.BildirilenBitisSaati.Value.ToString(@"hh\:mm") : (isToday && DateTime.Now.TimeOfDay < new TimeSpan(17,0,0) ? DateTime.Now.ToString(@"HH\:mm") : "17:00"))" />
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label text-muted small">Açıklama / Not (Opsiyonel)</label>
+                                        <textarea name="PersonelSaatNotu" class="form-control" rows="2" placeholder="Örn: Sabah 08:30'da başlandı, akşam 18:00'de çıkış yapıldı...">@o.PersonelSaatNotu</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-light" data-bs-dismiss="modal">İptal</button>
+                                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-paper-plane me-1"></i> Saatleri Yöneticiye Gönder</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+}

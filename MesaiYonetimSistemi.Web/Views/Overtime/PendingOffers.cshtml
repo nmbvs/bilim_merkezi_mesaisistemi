@@ -1,0 +1,88 @@
+@model IEnumerable<MesaiYonetimSistemi.Application.DTOs.OfferDto>
+@{
+    ViewData["Title"] = "Bekleyen Mesai Teklifleri";
+}
+
+<div class="mb-4">
+    <h4 class="font-weight-bold m-0">Bekleyen Mesai Tekliflerim</h4>
+    <p class="text-muted small m-0">Tarafınıza sunulmuş hafta sonu mesai tekliflerini 24 saat içerisinde yanıtlayınız.</p>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="card-custom p-5 text-center">
+        <i class="fa-solid fa-envelope-open text-muted fs-1 mb-3"></i>
+        <h5 class="font-weight-bold">Bekleyen Teklif Yok</h5>
+        <p class="text-muted small m-0">Şu anda yanıtınızı bekleyen herhangi bir mesai teklifi bulunmuyor.</p>
+    </div>
+}
+else
+{
+    <div class="row g-4">
+        @foreach (var item in Model)
+        {
+            <div class="col-md-6">
+                <div class="card-custom p-4 border-start border-4 border-warning">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <span class="badge badge-bekliyor mb-2">24 Saatlik Teklif</span>
+                            <h5 class="font-weight-bold m-0">@item.OvertimeTarih.ToString("dd.MM.yyyy dddd")</h5>
+                        </div>
+                        <div class="text-end">
+                            <span class="small text-muted d-block">Kalan Süre</span>
+                            <span class="badge bg-dark text-warning fs-6" data-countdown-end="@item.SonCevapTarihi.ToString("yyyy-MM-ddTHH:mm:ss")">--:--:--</span>
+                        </div>
+                    </div>
+
+                    <p class="text-muted small mb-3">
+                        <i class="fa-solid fa-clock me-1 text-primary"></i> Saat: <strong>@item.BaslangicSaati.ToString(@"hh\:mm") - @item.BitisSaati.ToString(@"hh\:mm")</strong><br />
+                        <i class="fa-solid fa-info-circle me-1 text-primary"></i> Açıklama: <strong>@item.OvertimeAciklama</strong>
+                    </p>
+
+                    <div class="d-flex gap-2 pt-2 border-top">
+                        <form asp-action="RespondOffer" method="post" class="w-50">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="offerId" value="@item.Id" />
+                            <input type="hidden" name="isAccepted" value="true" />
+                            <button type="submit" class="btn btn-success w-100 font-weight-bold">
+                                <i class="fa-solid fa-check me-1"></i> Kabul Et
+                            </button>
+                        </form>
+
+                        <button type="button" class="btn btn-outline-danger w-50 font-weight-bold" data-bs-toggle="modal" data-bs-target="#rejectModal_@item.Id">
+                            <i class="fa-solid fa-xmark me-1"></i> Reddet
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal -->
+            <div class="modal fade" id="rejectModal_@item.Id" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <form asp-action="RespondOffer" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="offerId" value="@item.Id" />
+                            <input type="hidden" name="isAccepted" value="false" />
+                            <div class="modal-header">
+                                <h5 class="modal-title text-danger">Teklifi Reddet</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p class="small text-muted">Reddedilen teklifler otomatik olarak sıradaki personele iletilmektedir.</p>
+                                <div class="mb-3">
+                                    <label class="form-label small">Red Gerekçesi (İsteğe Bağlı)</label>
+                                    <textarea name="rejectReason" class="form-control" rows="3"></textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-light" data-bs-dismiss="modal">İptal</button>
+                                <button type="submit" class="btn btn-danger">Reddet</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

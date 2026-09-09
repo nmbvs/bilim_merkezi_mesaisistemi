@@ -1,0 +1,62 @@
+@model MesaiYonetimSistemi.Application.DTOs.UserDto
+@{
+    ViewData["Title"] = "Profil Bilgileri";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card-custom p-4">
+            <div class="d-flex align-items-center gap-3 mb-4 border-bottom pb-3">
+                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 64px; height: 64px; font-size: 1.75rem; font-weight:700;">
+                    @Model.AdSoyad.Substring(0, 1).ToUpper()
+                </div>
+                <div>
+                    <h4 class="m-0 font-weight-bold">@Model.AdSoyad</h4>
+                    <span class="badge bg-primary">@Model.Role</span>
+                    <span class="text-muted small ms-2">Sicil No: @Model.SicilNo</span>
+                </div>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label text-muted small">E-posta</label>
+                    <input type="text" class="form-control" value="@Model.Email" readonly />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-muted small">TC Kimlik No</label>
+                    <input type="text" class="form-control" value="@Model.TcKimlikNo" readonly />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-muted small">Telefon</label>
+                    <input type="text" class="form-control" value="@Model.PhoneNumber" readonly />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-muted small">Departman</label>
+                    <input type="text" class="form-control" value="@Model.Departman" readonly />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-muted small">Görev</label>
+                    <input type="text" class="form-control" value="@Model.Gorev" readonly />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-muted small">Şube</label>
+                    <input type="text" class="form-control" value="@Model.Sube" readonly />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-muted small">İşe Giriş Tarihi</label>
+                    <input type="text" class="form-control" value="@Model.IseGirisTarihi.ToString("dd.MM.yyyy")" readonly />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-muted small">İlk Şifre (Yönetici Tarafından Verilen)</label>
+                    <input type="text" class="form-control" value="@(string.IsNullOrEmpty(Model.IlkSifre) ? "********" : Model.IlkSifre)" readonly />
+                </div>
+            </div>
+
+            <div class="mt-4 pt-3 border-top d-flex justify-content-end">
+                <a asp-action="ChangePassword" class="btn btn-outline-primary">
+                    <i class="fa-solid fa-key me-2"></i> Şifre Değiştir
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

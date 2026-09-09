@@ -1,0 +1,195 @@
+@model IEnumerable<MesaiYonetimSistemi.Application.DTOs.QueueDto>
+@{
+    ViewData["Title"] = "Adil Sıra Yönetimi";
+    var isYonetici = User.IsInRole("Yonetici");
+}
+
+@Html.AntiForgeryToken()
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h4 class="font-weight-bold m-0">Bilim Merkezi Hafta Sonu Mesai Adil Sıra Listesi</h4>
+        <p class="text-muted small m-0">Sistem mesai tekliflerini bu sıra pozisyonuna göre otomatik olarak en üstteki personele gönderir.</p>
+    </div>
+    @if (isYonetici)
+    {
+        <div class="d-flex gap-2">
+            <form asp-action="ResetQueue" method="post" class="d-inline">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('Tüm sıralamayı varsayılana sıfırlamak istediğinizden emin misiniz?');">
+                    <i class="fa-solid fa-rotate-left me-1"></i> Sıralamayı Sıfırla
+                </button>
+            </form>
+        </div>
+    }
+</div>
+
+@if (isYonetici)
+{
+    <div class="alert alert-info d-flex align-items-center py-2 px-3 mb-4 rounded-3 small">
+        <i class="fa-solid fa-circle-info fa-lg me-2 text-info"></i>
+        <div>
+            <strong>Yönetici İpucu:</strong> Personel sırasını değiştirmek için tablodaki <i class="fa-solid fa-arrow-up text-primary mx-1"></i> <strong>Yukarı</strong> / <i class="fa-solid fa-arrow-down text-primary mx-1"></i> <strong>Aşağı</strong> butonlarını kullanabilirsiniz. Değişiklikler anında kaydedilir.
+        </div>
+    </div>
+}
+
+<div class="card-custom p-4">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0" id="queueTable">
+            <thead class="table-light">
+                <tr>
+                    <th style="width: 140px;">Sıra Pozisyonu</th>
+                    <th>Sicil No</th>
+                    <th>Ad Soyad</th>
+                    <th>Departman / Şube</th>
+                    <th>Son Mesai Tarihi</th>
+                    <th>Kabul Edilen</th>
+                    <th>Reddedilen</th>
+                    <th>Sıra Durumu</th>
+                    @if (isYonetici)
+                    {
+                        <th class="text-center" style="width: 130px;">Sırayı Değiştir</th>
+                    }
+                </tr>
+            </thead>
+            <tbody id="queueTableBody">
+                @if (!Model.Any())
+                {
+                    <tr><td colspan="@(isYonetici ? 9 : 8)" class="text-center text-muted py-4">Kuyrukta aktif personel bulunmuyor.</td></tr>
+                }
+                @foreach (var q in Model)
+                {
+                    <tr data-personnel-id="@q.PersonnelId" class="queue-row">
+                        <td class="pos-cell">
+                            @if (q.SiraPozisyonu == 1)
+                            {
+                                <span class="badge bg-warning text-dark px-2 py-2 pos-badge"><i class="fa-solid fa-crown me-1"></i> 1. Sırada</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary rounded-circle pos-badge" style="width:32px; height:32px; display:inline-flex; align-items:center; justify-content:center;">@q.SiraPozisyonu</span>
+                            }
+                        </td>
+                        <td><strong>@q.SicilNo</strong></td>
+                        <td><span class="fw-semibold">@q.PersonnelAdSoyad</span></td>
+                        <td><span class="badge bg-light text-dark border">@q.Departman</span> / <small class="text-muted">@q.Sube</small></td>
+                        <td>@(q.SonMesaiTarihi.HasValue ? q.SonMesaiTarihi.Value.ToString("dd.MM.yyyy") : "-")</td>
+                        <td><span class="badge badge-kabul">@q.ToplamKabulEdilenMesai Kabul</span></td>
+                        <td><span class="badge badge-red">@q.ToplamReddedilenMesai Red</span></td>
+                        <td>
+                            @if (q.AktifMi)
+                            {
+                                <span class="text-success small fw-bold"><i class="fa-solid fa-circle text-success me-1" style="font-size:0.6rem;"></i>Aktif Sırada</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted small"><i class="fa-solid fa-circle text-secondary me-1" style="font-size:0.6rem;"></i>Pasif</span>
+                            }
+                        </td>
+                        @if (isYonetici)
+                        {
+                            <td class="text-center">
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <button type="button" class="btn btn-outline-primary btn-move-up" title="Yukarı Taşı">
+                                        <i class="fa-solid fa-arrow-up"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-outline-primary btn-move-down" title="Aşağı Taşı">
+                                        <i class="fa-solid fa-arrow-down"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div id="saveToast" class="toast align-items-center text-bg-success border-0 position-fixed bottom-0 end-0 m-3 p-2" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="d-flex">
+        <div class="toast-body">
+            <i class="fa-solid fa-check-circle me-2"></i> Sıra pozisyonları başarıyla güncellendi!
+        </div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+</div>
+
+@section Scripts {
+    @if (isYonetici)
+    {
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                const tbody = document.getElementById("queueTableBody");
+
+                function getAntiForgeryToken() {
+                    const tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
+                    return tokenInput ? tokenInput.value : '';
+                }
+
+                function updatePositionsUI() {
+                    const rows = tbody.querySelectorAll(".queue-row");
+                    rows.forEach((row, index) => {
+                        const posCell = row.querySelector(".pos-cell");
+                        const posNum = index + 1;
+                        if (posNum === 1) {
+                            posCell.innerHTML = `<span class="badge bg-warning text-dark px-2 py-2 pos-badge"><i class="fa-solid fa-crown me-1"></i> 1. Sırada</span>`;
+                        } else {
+                            posCell.innerHTML = `<span class="badge bg-secondary rounded-circle pos-badge" style="width:32px; height:32px; display:inline-flex; align-items:center; justify-content:center;">${posNum}</span>`;
+                        }
+                    });
+                }
+
+                async function saveQueueOrder() {
+                    const rows = tbody.querySelectorAll(".queue-row");
+                    const orderedIds = Array.from(rows).map(r => r.getAttribute("data-personnel-id"));
+
+                    try {
+                        const response = await fetch('/Queue/ReorderQueue', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'RequestVerificationToken': getAntiForgeryToken()
+                            },
+                            body: JSON.stringify(orderedIds)
+                        });
+
+                        if (response.ok) {
+                            const toastEl = document.getElementById('saveToast');
+                            if (toastEl) {
+                                const toast = new bootstrap.Toast(toastEl, { delay: 2500 });
+                                toast.show();
+                            }
+                        }
+                    } catch (err) {
+                        console.error("Sıralama güncellenemedi:", err);
+                    }
+                }
+
+                tbody.addEventListener("click", function (e) {
+                    const btnUp = e.target.closest(".btn-move-up");
+                    const btnDown = e.target.closest(".btn-move-down");
+
+                    if (btnUp) {
+                        const row = btnUp.closest(".queue-row");
+                        const prev = row.previousElementSibling;
+                        if (prev && prev.classList.contains("queue-row")) {
+                            tbody.insertBefore(row, prev);
+                            updatePositionsUI();
+                            saveQueueOrder();
+                        }
+                    } else if (btnDown) {
+                        const row = btnDown.closest(".queue-row");
+                        const next = row.nextElementSibling;
+                        if (next && next.classList.contains("queue-row")) {
+                            tbody.insertBefore(next, row);
+                            updatePositionsUI();
+                            saveQueueOrder();
+                        }
+                    }
+                });
+            });
+        </script>
+    }
+}

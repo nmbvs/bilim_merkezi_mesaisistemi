@@ -1,0 +1,57 @@
+## ════════════════════════════════════════════════════════════
+## .gitignore – Mesai Yönetim Sistemi
+##
+## Bu dosya Git'e hangi dosyaların takip EDİLMEYECEĞİNİ söyler.
+## Derleme çıktıları, kullanıcıya özel ayarlar ve hassas bilgiler
+## (veritabanı dosyası, şifreler vb.) burada listelenmiştir.
+## ════════════════════════════════════════════════════════════
+
+## ── Derleme Çıktıları ────────────────────────────────────────
+## Her "dotnet build" komutu bunları yeniden oluşturur.
+## Paylaşmaya gerek yok, boyutu çok büyük.
+[Bb]in/
+[Oo]bj/
+*.exe
+*.msi
+bin-desktop/
+
+
+## ── Visual Studio / VS Code Ayarları ────────────────────────
+## IDE'ye özgü kullanıcı dosyaları – başkasının ortamını bozabilir.
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+.vscode/
+
+## ── SQLite Veritabanı Dosyası (ÖNEMLİ) ─────────────────────
+## Veritabanı proje başlatıldığında OTOMATIK oluşturulur.
+## Gerçek veriler burada olduğundan Git'e EKLEME.
+## Teslim ederken temiz bir veritabanı için bu dosyayı sil.
+*.db
+*.db-shm
+*.db-wal
+
+## ── .NET Araçları ────────────────────────────────────────────
+*.ncrunchproject
+*.ncrunchsolution
+*.DotSettings.user
+
+## ── Yayınlama Çıktıları ──────────────────────────────────────
+[Pp]ublish/
+PublishProfiles/
+
+## ── Kullanıcıya Özel Ayarlar ────────────────────────────────
+appsettings.Development.json
+
+## ── Windows Sistem Dosyaları ────────────────────────────────
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+## ── macOS Sistem Dosyaları ──────────────────────────────────
+.DS_Store
+.AppleDouble
+.LSOverride

@@ -1,0 +1,297 @@
+@model IEnumerable<MesaiYonetimSistemi.Application.DTOs.OvertimeDto>
+@{
+    ViewData["Title"] = "Hafta Sonu Mesai İşlemleri";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="font-weight-bold m-0">Hafta Sonu Mesai Listesi ve Sıra Takibi</h4>
+        <p class="text-muted small m-0">Teklif akışını, şu anda teklif gönderilen ve reddedilirse sırada bekleyen personeli canlı takip edin.</p>
+    </div>
+    @if (User.IsInRole("Yonetici"))
+    {
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="fa-solid fa-plus me-1"></i> Yeni Mesai Oluştur
+        </a>
+    }
+</div>
+
+<div class="card-custom p-4">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Mesai ID</th>
+                    <th>Tarih</th>
+                    <th>Saat</th>
+                    <th>Departman / Şube</th>
+                    <th>Şu Anda Teklif Gönderilen</th>
+                    <th>Reddedilirse Sıradaki (Yedek)</th>
+                    <th>Teklif Geçmişi</th>
+                    <th>Durum</th>
+                    @if (User.IsInRole("Yonetici"))
+                    {
+                        <th class="text-end">İşlem</th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr><td colspan="@(User.IsInRole("Yonetici") ? 9 : 8)" class="text-center text-muted py-4">Kayıtlı mesai bulunamadı.</td></tr>
+                }
+                @foreach (var o in Model)
+                {
+                    <tr>
+                        <td><strong>#@o.Id</strong></td>
+                        <td>
+                            <strong>@o.Tarih.ToString("dd.MM.yyyy dddd")</strong>
+                            @if (o.ResmiTatilMi)
+                            {
+                                <span class="badge bg-danger-subtle text-danger ms-1" style="font-size: 0.7rem;">Resmi Tatil</span>
+                            }
+                        </td>
+                        <td>
+                            @if (o.SaatBelirsizMi)
+                            {
+                                if (o.SaatBildirimDurumu == MesaiYonetimSistemi.Core.Enums.SaatBildirimStatus.Yok)
+                                {
+                                    <span class="badge bg-warning text-dark"><i class="fa-solid fa-clock me-1"></i> Saati Belirsiz</span>
+                                }
+                                else if (o.SaatBildirimDurumu == MesaiYonetimSistemi.Core.Enums.SaatBildirimStatus.OnayBekliyor)
+                                {
+                                    <div>
+                                        <strong class="text-primary">@o.BildirilenBaslangicSaati?.ToString(@"hh\:mm") - @o.BildirilenBitisSaati?.ToString(@"hh\:mm")</strong>
+                                    </div>
+                                    <span class="badge bg-info text-dark" style="font-size:0.7rem;"><i class="fa-solid fa-hourglass-half me-1"></i> Onay Bekliyor</span>
+                                    @if (!string.IsNullOrEmpty(o.PersonelSaatNotu))
+                                    {
+                                        <div class="small text-muted fst-italic mt-1" title="@o.PersonelSaatNotu">
+                                            <i class="fa-solid fa-comment me-1"></i>"@o.PersonelSaatNotu"
+                                        </div>
+                                    }
+                                }
+                                else if (o.SaatBildirimDurumu == MesaiYonetimSistemi.Core.Enums.SaatBildirimStatus.Reddedildi)
+                                {
+                                    <span class="badge bg-danger"><i class="fa-solid fa-xmark me-1"></i> Reddedildi</span>
+                                }
+                                else
+                                {
+                                    <strong class="text-success">@o.BaslangicSaati.ToString(@"hh\:mm") - @o.BitisSaati.ToString(@"hh\:mm")</strong>
+                                }
+                            }
+                            else
+                            {
+                                <small class="text-muted">@o.BaslangicSaati.ToString(@"hh\:mm") - @o.BitisSaati.ToString(@"hh\:mm")</small>
+                            }
+                        </td>
+                        <td><span class="badge bg-light text-dark border">@o.Departman</span><br/><small class="text-muted">@o.Sube</small></td>
+                        <td>
+                            @if (!string.IsNullOrEmpty(o.AtananUserAdSoyad))
+                            {
+                                <span class="badge bg-success-subtle text-success border border-success px-2 py-2">
+                                    <i class="fa-solid fa-user-check me-1"></i>Atandı: @o.AtananUserAdSoyad
+                                </span>
+                            }
+                            else if (!string.IsNullOrEmpty(o.ActivePersonnelAdSoyad) || o.ActiveOffer != null)
+                            {
+                                var activeName = o.ActivePersonnelAdSoyad ?? o.ActiveOffer?.PersonnelAdSoyad;
+                                <div class="p-2 rounded-3 bg-warning-subtle border border-warning text-dark small">
+                                    <i class="fa-solid fa-paper-plane text-warning me-1"></i>
+                                    <strong>@activeName</strong>
+                                    <span class="badge bg-warning text-dark ms-1">Teklif Bekliyor</span>
+                                </div>
+                            }
+                            else
+                            {
+                                <span class="text-muted small"><i class="fa-solid fa-minus me-1"></i>Kuyrukta Aday Yok</span>
+                            }
+                        </td>
+                        <td>
+                            @if (!string.IsNullOrEmpty(o.AtananUserAdSoyad))
+                            {
+                                <span class="text-muted small"><i class="fa-solid fa-check text-success me-1"></i>Mesai Atandı</span>
+                            }
+                            else if (!string.IsNullOrEmpty(o.NextCandidateAdSoyad))
+                            {
+                                <div class="p-2 rounded-3 bg-info-subtle border border-info text-dark small">
+                                    <i class="fa-solid fa-user-clock text-info me-1"></i>
+                                    <strong>@o.NextCandidateAdSoyad</strong>
+                                    <span class="badge bg-info text-dark ms-1">#@o.NextCandidateSiraNo Sırada</span>
+                                </div>
+                            }
+                            else
+                            {
+                                <span class="text-muted small"><i class="fa-solid fa-ellipsis me-1"></i>Sırada personeli yok</span>
+                            }
+                        </td>
+                        <td>
+                            @if (o.OfferHistory.Any())
+                            {
+                                var rejectedCount = o.OfferHistory.Count(h => h.Durum == "Reddedildi");
+                                
+                                <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill shadow-sm" 
+                                        data-bs-toggle="modal" data-bs-target="#offerModal_@o.Id">
+                                    <i class="fa-solid fa-clock-rotate-left me-1"></i>@o.OfferHistory.Count Teklif Adımı
+                                </button>
+
+                                @if (rejectedCount > 0)
+                                {
+                                    <div class="mt-1">
+                                        <span class="badge bg-danger-subtle text-danger border border-danger" style="font-size: 0.72rem;">
+                                            <i class="fa-solid fa-triangle-exclamation me-1"></i>@rejectedCount Personel Reddedetti
+                                        </span>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <span class="text-muted small">-</span>
+                            }
+                        </td>
+                        <td>
+                            @if (o.SaatBelirsizMi && o.SaatBildirimDurumu == MesaiYonetimSistemi.Core.Enums.SaatBildirimStatus.OnayBekliyor)
+                            {
+                                <span class="badge bg-info text-dark"><i class="fa-solid fa-clock me-1"></i> Saat Onayı Bekliyor</span>
+                            }
+                            else if (o.Durum == "Planlandi") { <span class="badge badge-bekliyor">Planlandı</span> }
+                            else if (o.Durum == "Tamamlandi") { <span class="badge badge-kabul">Tamamlandı</span> }
+                            else { <span class="badge badge-red">İptal</span> }
+                        </td>
+                        @if (User.IsInRole("Yonetici"))
+                        {
+                            <td class="text-end">
+                                <div class="d-flex justify-content-end gap-1">
+                                    @if (o.SaatBelirsizMi && o.SaatBildirimDurumu == MesaiYonetimSistemi.Core.Enums.SaatBildirimStatus.OnayBekliyor)
+                                    {
+                                        <form asp-action="ApproveHours" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="overtimeId" value="@o.Id" />
+                                            <button type="submit" class="btn btn-success btn-sm" title="Saatleri Onayla & Mesaiyi Tamamla" onclick="return confirm('Personelin bildirdiği saatleri (@o.BildirilenBaslangicSaati?.ToString(@"hh\:mm") - @o.BildirilenBitisSaati?.ToString(@"hh\:mm")) onaylıyor musunuz?');">
+                                                <i class="fa-solid fa-check me-1"></i> Onayla
+                                            </button>
+                                        </form>
+
+                                        <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#rejectHoursModal_@o.Id" title="Saatleri Reddet">
+                                            <i class="fa-solid fa-xmark me-1"></i> Reddet
+                                        </button>
+                                    }
+
+                                    @if (o.Durum == "Planlandi")
+                                    {
+                                        <form asp-action="Cancel" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="overtimeId" value="@o.Id" />
+                                            <input type="hidden" name="reason" value="Yönetici İptali" />
+                                            <button type="submit" class="btn btn-outline-secondary btn-sm" onclick="return confirm('Bu mesaiyi iptal etmek istediğinizden emin misiniz?');">
+                                                <i class="fa-solid fa-ban me-1"></i> İptal Et
+                                            </button>
+                                        </form>
+                                    }
+                                </div>
+                            </td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@* Modal Pencereleri (Tablo dışına çıkartılarak z-index, pointer-events ve focus sorunları tamamen çözüldü) *@
+@foreach (var o in Model)
+{
+    @if (o.OfferHistory.Any())
+    {
+        <!-- Detail Modal for this Overtime -->
+        <div class="modal fade" id="offerModal_@o.Id" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header bg-light">
+                        <h6 class="modal-title font-weight-bold">
+                            <i class="fa-solid fa-list-check me-2 text-primary"></i>Mesai #@o.Id - Teklif & Red Geçmişi
+                        </h6>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+                    </div>
+                    <div class="modal-body p-3">
+                        <div class="mb-3 p-2 bg-light rounded small">
+                            <strong>Tarih:</strong> @o.Tarih.ToString("dd.MM.yyyy dddd") <br/>
+                            <strong>Açıklama:</strong> @o.Aciklama
+                        </div>
+                        <h6 class="small font-weight-bold text-muted mb-2">Teklif Akışı ve Personel Yanıtları:</h6>
+                        <div class="d-flex flex-column gap-2">
+                            @foreach(var h in o.OfferHistory.OrderBy(x => x.SiraNo))
+                            {
+                                <div class="p-3 rounded border @(h.Durum == "Reddedildi" ? "bg-danger-subtle border-danger" : (h.Durum == "KabulEdildi" ? "bg-success-subtle border-success" : "bg-warning-subtle border-warning"))">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <div>
+                                            <span class="badge bg-secondary me-1">#@h.SiraNo Sırada</span>
+                                            <strong>@h.PersonnelAdSoyad</strong>
+                                        </div>
+                                        <div>
+                                            @if (h.Durum == "KabulEdildi")
+                                            {
+                                                <span class="badge bg-success"><i class="fa-solid fa-check me-1"></i>Kabul Edildi</span>
+                                            }
+                                            else if (h.Durum == "Reddedildi")
+                                            {
+                                                <span class="badge bg-danger"><i class="fa-solid fa-xmark me-1"></i>Reddedildi</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-warning text-dark"><i class="fa-solid fa-hourglass-half me-1"></i>Teklif Bekliyor</span>
+                                            }
+                                        </div>
+                                    </div>
+                                    @if (h.Durum == "Reddedildi")
+                                    {
+                                        <div class="mt-2 p-2 bg-white rounded border border-danger-subtle text-danger small">
+                                            <i class="fa-solid fa-comment-dots me-1"></i>
+                                            <strong>Red Mazereti:</strong> @(string.IsNullOrWhiteSpace(h.RedNedeni) ? "Mazeret belirtilmedi." : h.RedNedeni)
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </div>
+                    <div class="modal-footer py-2">
+                        <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Kapat</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (User.IsInRole("Yonetici") && o.SaatBelirsizMi && o.SaatBildirimDurumu == MesaiYonetimSistemi.Core.Enums.SaatBildirimStatus.OnayBekliyor)
+    {
+        <!-- Reject Hours Modal -->
+        <div class="modal fade text-start" id="rejectHoursModal_@o.Id" tabindex="-1" aria-labelledby="rejectModalLabel_@o.Id" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <form asp-action="RejectHours" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="overtimeId" value="@o.Id" />
+                        <div class="modal-header bg-light">
+                            <h5 class="modal-title font-weight-bold" id="rejectModalLabel_@o.Id">
+                                <i class="fa-solid fa-triangle-exclamation text-danger me-2"></i> Çalışma Saatlerini Reddet
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p class="text-muted small mb-2">@o.AtananUserAdSoyad tarafından bildirilen saatler: <strong>@o.BildirilenBaslangicSaati?.ToString(@"hh\:mm") - @o.BildirilenBitisSaati?.ToString(@"hh\:mm")</strong></p>
+                            <label for="reason_@o.Id" class="form-label text-muted small fw-bold">Red Nedeniniz / Düzeltme Notu</label>
+                            <textarea id="reason_@o.Id" name="reason" class="form-control" rows="3" placeholder="Örn: Bitiş saati 17:00 olması gerekiyordu, lütfen kontrol edin..." required autofocus></textarea>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-light" data-bs-dismiss="modal">İptal</button>
+                            <button type="submit" class="btn btn-danger"><i class="fa-solid fa-xmark me-1"></i> Reddet & Bildir</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    }
+}
+
+@section Scripts {
+}

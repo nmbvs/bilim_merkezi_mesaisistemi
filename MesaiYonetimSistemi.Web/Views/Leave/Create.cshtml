@@ -1,0 +1,70 @@
+@model MesaiYonetimSistemi.Application.DTOs.CreateLeaveDto
+@{
+    ViewData["Title"] = "Yeni İzin Ekle";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="font-weight-bold m-0">Yeni İzin Ekle</h4>
+        <p class="text-muted small m-0">Personel için sistem üzerinden izin tanımlayın.</p>
+    </div>
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        <i class="fa-solid fa-arrow-left me-1"></i> Listeye Dön
+    </a>
+</div>
+
+<div class="card-custom p-4">
+    <form asp-action="Create" method="post">
+        @Html.AntiForgeryToken()
+        
+        <div class="row g-3 config-form">
+            <div class="col-md-6 mb-3">
+                <label asp-for="PersonnelId" class="form-label font-weight-bold">Personel Seçin</label>
+                <select asp-for="PersonnelId" class="form-select" required>
+                    <option value="">-- Personel Seç --</option>
+                    @foreach (var user in ViewBag.Users)
+                    {
+                        <option value="@user.Id">@user.AdSoyad - @user.Departman</option>
+                    }
+                </select>
+                <span asp-validation-for="PersonnelId" class="text-danger small"></span>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+                <label asp-for="IzinTuru" class="form-label font-weight-bold">İzin Türü</label>
+                <select asp-for="IzinTuru" class="form-select" required>
+                    <option value="Yıllık İzin">Yıllık İzin</option>
+                    <option value="Haftalık İzin">Haftalık İzin</option>
+                    <option value="Mazeret İzni">Mazeret İzni</option>
+                    <option value="Ücretsiz İzin">Ücretsiz İzin</option>
+                    <option value="Hastalık İzni">Hastalık İzni</option>
+                </select>
+                <span asp-validation-for="IzinTuru" class="text-danger small"></span>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+                <label asp-for="BaslangicTarihi" class="form-label font-weight-bold">Başlangıç Tarihi</label>
+                <input asp-for="BaslangicTarihi" type="date" class="form-control" required />
+                <span asp-validation-for="BaslangicTarihi" class="text-danger small"></span>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label asp-for="BitisTarihi" class="form-label font-weight-bold">Bitiş Tarihi</label>
+                <input asp-for="BitisTarihi" type="date" class="form-control" required />
+                <span asp-validation-for="BitisTarihi" class="text-danger small"></span>
+            </div>
+            
+            <div class="col-12 mb-3">
+                <label asp-for="Aciklama" class="form-label font-weight-bold">Açıklama (Opsiyonel)</label>
+                <textarea asp-for="Aciklama" class="form-control" rows="3" placeholder="İzin gerekçesi veya notu..."></textarea>
+                <span asp-validation-for="Aciklama" class="text-danger small"></span>
+            </div>
+
+            <div class="col-12 mt-4 text-end">
+                <button type="submit" class="btn btn-primary px-4 py-2">
+                    <i class="fa-solid fa-save me-1"></i> İzin Kaydet
+                </button>
+            </div>
+        </div>
+    </form>
+</div>

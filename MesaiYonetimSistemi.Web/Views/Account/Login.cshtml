@@ -1,0 +1,217 @@
+@{
+    Layout = null;
+    ViewData["Title"] = "Giriş Yap";
+    var activePortal = ViewBag.PortalType as string ?? "Personel";
+}
+<!DOCTYPE html>
+<html lang="tr" data-theme="light">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Giriş Yap - Kocaeli Bilim Merkezi Mesai Yönetim Sistemi</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="~/css/site.css" />
+    <style>
+        body {
+            background: linear-gradient(135deg, #0b192c 0%, #1e3a8a 50%, #004d40 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+        .login-card {
+            width: 100%;
+            max-width: 460px;
+            background: rgba(11, 25, 44, 0.9);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 168, 150, 0.25);
+            border-radius: 1.25rem;
+            padding: 2.25rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+            color: #ffffff;
+            position: relative;
+            z-index: 10;
+        }
+        .portal-tabs .nav-link {
+            color: #94a3b8;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            padding: 0.75rem 1rem;
+            transition: all 0.2s ease;
+        }
+        .portal-tabs .nav-link.active.personel-tab {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+        .portal-tabs .nav-link.active.yonetici-tab {
+            background: linear-gradient(135deg, #00a896 0%, #028090 100%);
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(0, 168, 150, 0.4);
+        }
+        .form-control {
+            pointer-events: auto !important;
+            position: relative;
+            z-index: 20;
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Loading Overlay (pointer-events: none by default when hidden) -->
+    <div id="login-loader" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(11, 25, 44, 0.95); z-index: 99999; display: none; pointer-events: none; align-items: center; justify-content: center; flex-direction: column;">
+        <div class="spinner-border" role="status" style="width: 3.5rem; height: 3.5rem; color: #00a896;">
+            <span class="visually-hidden">Giriş Yapılıyor...</span>
+        </div>
+        <div class="mt-3 font-weight-bold text-white" style="font-size: 1.1rem;">Giriş Yapılıyor...</div>
+        <div class="text-info small">Lütfen bekleyiniz, kimlik doğrulaması yapılıyor.</div>
+    </div>
+
+    <div class="login-card">
+        <div class="text-center mb-4">
+            <div class="d-inline-flex align-items-center justify-content-center p-3 rounded-circle text-white mb-3" style="width: 64px; height: 64px; background: linear-gradient(135deg, #00a896 0%, #028090 100%); box-shadow: 0 0 20px rgba(0, 168, 150, 0.5);">
+                <i class="fa-solid fa-atom fs-2"></i>
+            </div>
+            <h4 class="font-weight-bold m-0 text-white">Bilim Merkezi Mesai</h4>
+            <p class="text-info small fw-semibold m-0">Kocaeli Büyükşehir Belediyesi</p>
+        </div>
+
+        <!-- Portal Selector Tabs -->
+        <ul class="nav nav-pills nav-fill portal-tabs p-1 bg-dark bg-opacity-50 rounded-3 mb-4" id="loginTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link @(activePortal == "Personel" ? "active personel-tab" : "") w-100" id="personel-tab" data-bs-toggle="pill" data-bs-target="#personel-panel" type="button" role="tab" onclick="setPortal('Personel')">
+                    <i class="fa-solid fa-user-clock me-2"></i> Personel Girişi
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link @(activePortal == "Yonetici" ? "active yonetici-tab" : "") w-100" id="yonetici-tab" data-bs-toggle="pill" data-bs-target="#yonetici-panel" type="button" role="tab" onclick="setPortal('Yonetici')">
+                    <i class="fa-solid fa-user-shield me-2"></i> Yönetici Girişi
+                </button>
+            </li>
+        </ul>
+
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div class="alert alert-danger border-0 small mb-4 py-2">
+                <div asp-validation-summary="All"></div>
+            </div>
+        }
+
+        <div class="tab-content" id="loginTabsContent">
+            <!-- Personel Login Form -->
+            <div class="tab-pane fade @(activePortal == "Personel" ? "show active" : "")" id="personel-panel" role="tabpanel">
+                <form asp-controller="Account" asp-action="Login" method="post" id="personelLoginForm">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="portalType" value="Personel" />
+                    <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
+
+                    <div class="mb-3">
+                        <label class="form-label text-white-50 small">Personel E-posta Adresi</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-dark border-secondary text-white-50"><i class="fa-solid fa-envelope"></i></span>
+                            <input type="email" id="emailPersonel" name="email" class="form-control bg-dark text-white border-secondary" placeholder="personel@belediye.gov.tr" required autocomplete="username" autofocus />
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-white-50 small">Şifre</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-dark border-secondary text-white-50"><i class="fa-solid fa-lock"></i></span>
+                            <input type="password" id="passwordPersonel" name="password" class="form-control bg-dark text-white border-secondary" placeholder="••••••••" required autocomplete="current-password" />
+                        </div>
+                    </div>
+
+                    <div class="form-check mb-4">
+                        <input type="checkbox" name="rememberMe" value="true" class="form-check-input" id="rememberMePersonel">
+                        <label class="form-check-label text-white-50 small" for="rememberMePersonel">Beni Hatırla</label>
+                    </div>
+
+                    <button type="submit" class="btn btn-success w-100 py-2 rounded-3 font-weight-bold">
+                        <i class="fa-solid fa-right-to-bracket me-2"></i> Personel Paneline Giriş Yap
+                    </button>
+                </form>
+            </div>
+
+            <!-- Yönetici Login Form -->
+            <div class="tab-pane fade @(activePortal == "Yonetici" ? "show active" : "")" id="yonetici-panel" role="tabpanel">
+                <form asp-controller="Account" asp-action="Login" method="post" id="yoneticiLoginForm">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="portalType" value="Yonetici" />
+                    <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
+
+                    <div class="mb-3">
+                        <label class="form-label text-white-50 small">Yönetici E-posta Adresi</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-dark border-secondary text-white-50"><i class="fa-solid fa-user-gear"></i></span>
+                            <input type="email" id="emailYonetici" name="email" class="form-control bg-dark text-white border-secondary" placeholder="admin@belediye.gov.tr" required autocomplete="username" />
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-white-50 small">Yönetici Şifresi</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-dark border-secondary text-white-50"><i class="fa-solid fa-key"></i></span>
+                            <input type="password" id="passwordYonetici" name="password" class="form-control bg-dark text-white border-secondary" placeholder="••••••••" required autocomplete="current-password" />
+                        </div>
+                    </div>
+
+                    <div class="form-check mb-4">
+                        <input type="checkbox" name="rememberMe" value="true" class="form-check-input" id="rememberMeYonetici">
+                        <label class="form-check-label text-white-50 small" for="rememberMeYonetici">Beni Hatırla</label>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 py-2 rounded-3 font-weight-bold">
+                        <i class="fa-solid fa-shield-halved me-2"></i> Yönetici Paneline Giriş Yap
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function setPortal(type) {
+            document.querySelectorAll('input[name="portalType"]').forEach(el => el.value = type);
+            
+            // Loader güvenliği
+            const loader = document.getElementById('login-loader');
+            if (loader) {
+                loader.style.display = 'none';
+                loader.style.pointerEvents = 'none';
+            }
+
+            setTimeout(function() {
+                if (type === 'Personel') {
+                    const el = document.getElementById('emailPersonel');
+                    if (el) el.focus();
+                } else {
+                    const el = document.getElementById('emailYonetici');
+                    if (el) el.focus();
+                }
+            }, 150);
+        }
+
+        document.querySelectorAll('form').forEach(form => {
+            form.addEventListener('submit', (e) => {
+                const loader = document.getElementById('login-loader');
+                if (loader) {
+                    loader.style.display = 'flex';
+                    loader.style.pointerEvents = 'auto';
+                }
+            });
+        });
+
+        // Sayfa yüklendiğinde loader gizli kalsın
+        window.addEventListener('DOMContentLoaded', () => {
+            const loader = document.getElementById('login-loader');
+            if (loader) {
+                loader.style.display = 'none';
+                loader.style.pointerEvents = 'none';
+            }
+            const activeEmail = document.querySelector('.tab-pane.show.active input[type="email"]');
+            if (activeEmail) activeEmail.focus();
+        });
+    </script>
+</body>
+</html>

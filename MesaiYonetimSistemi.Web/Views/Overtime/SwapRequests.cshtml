@@ -1,0 +1,56 @@
+@model IEnumerable<MesaiYonetimSistemi.Application.DTOs.OvertimeSwapDto>
+@{
+    ViewData["Title"] = "Mesai Değişim Talepleri";
+}
+
+<div class="mb-4">
+    <h4 class="font-weight-bold m-0">Mesai Değişim Talepleri</h4>
+    <p class="text-muted small m-0">Mesai arkadaşlarınızın sizinle mesai takas etme talepleri.</p>
+</div>
+
+<div class="card-custom p-4">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Tarih</th>
+                    <th>Talep Eden Personel</th>
+                    <th>Mesai Detayı</th>
+                    <th>Açıklama</th>
+                    <th>Talep Tarihi</th>
+                    <th class="text-end">İşlem</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr><td colspan="6" class="text-center text-muted py-4">Bekleyen mesai değişim talebi yok.</td></tr>
+                }
+                @foreach (var s in Model)
+                {
+                    <tr>
+                        <td><strong>@s.OvertimeTarih.ToString("dd.MM.yyyy")</strong></td>
+                        <td><span class="fw-semibold">@s.IstekYapanAdSoyad</span></td>
+                        <td>@s.OvertimeAciklama</td>
+                        <td>@s.Aciklama</td>
+                        <td>@s.OlusturmaTarihi.ToString("dd.MM.yyyy HH:mm")</td>
+                        <td class="text-end">
+                            <form asp-action="RespondSwap" method="post" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="swapRequestId" value="@s.Id" />
+                                <input type="hidden" name="isApproved" value="true" />
+                                <button type="submit" class="btn btn-success btn-sm"><i class="fa-solid fa-check me-1"></i> Onayla</button>
+                            </form>
+                            <form asp-action="RespondSwap" method="post" class="d-inline ms-1">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="swapRequestId" value="@s.Id" />
+                                <input type="hidden" name="isApproved" value="false" />
+                                <button type="submit" class="btn btn-danger btn-sm"><i class="fa-solid fa-xmark me-1"></i> Reddet</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
